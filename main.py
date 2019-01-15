@@ -78,6 +78,11 @@ class Polycube(object):
         # self.panels = {self.center: [Panel(face) for face in faces]}
         self.panels = {self.center: panels}
 
+    def panel_find(self, point: Point, direction: Dir):
+        while not isinstance(self.panels[point][direction], Panel):
+            point = self.panels[point][direction]
+        return self.panels[point][direction]
+
     def add(self, point: Point):
         offsets = {Dir.XPOS: (1, 0, 0), Dir.XNEG: (-1, 0, 0),
                    Dir.YPOS: (0, 1, 0), Dir.YNEG: (0, -1, 0),
@@ -89,9 +94,10 @@ class Polycube(object):
         for d, offset in offsets.items():
             neighbor = point + offset
             if neighbor in self.points:
-                common_panel = self.panels[neighbor][-d]
+                #common_panel = self.panels[neighbor][-d]
+                common_panel = self.panel_find(neighbor, -d)
                 common_panel.points.remove(neighbor)
-                self.panels[point][d] = common_panel
+                self.panels[point][d] = neighbor
             else:
                 possible_mergers = []
                 for merge_dir in Dir:
