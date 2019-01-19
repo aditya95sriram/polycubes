@@ -93,15 +93,12 @@ class Polycube(object):
     """
     def __init__(self):
         self.center = Point(0, 0, 0)
-        # faces = {d: Face(self.center, d) for d in Dir}
-        # panels = {d: Panel(face) for d, face in faces.items()}
 
         panels = {d: Panel(d, self.center) for d in Dir}
 
         self.points = {self.center}
-        # self.panels = {self.center: [[face] for face in faces]}
-        # self.panels = {self.center: [Panel(face) for face in faces]}
         self.panels = {self.center: panels}
+        self.all_panels = list(panels.values())
 
     def panel_find(self, point: Point, direction: Dir) -> Panel:
         if self.panels[point][direction] is None:
@@ -120,9 +117,11 @@ class Polycube(object):
         if len(panel1) > len(panel2):  # merge panel2 into panel1
             panel1.merge(panel2)
             self.panels[point2][direction] = point1
-        else: # merge panel1 into panel2
+            self.all_panels.remove(panel2)
+        else:  # merge panel1 into panel2
             panel2.merge(panel1)
             self.panels[point1][direction] = point2
+            self.all_panels.remove(panel1)
 
     def add(self, point: Point):
         offsets = {Dir.XPOS: (1, 0, 0), Dir.XNEG: (-1, 0, 0),
@@ -130,18 +129,18 @@ class Polycube(object):
                    Dir.ZPOS: (0, 0, 1), Dir.ZNEG: (0, 0, -1)}
 
         self.panels[point] = dict()
-        # print(self.points)
         for d, offset in offsets.items():
             neighbor = point + offset
-            # print(neighbor)
             if neighbor in self.points:
                 # common_panel = self.panels[neighbor][-d]
                 common_panel = self.panel_find(neighbor, -d)
                 common_panel.points.remove(neighbor)
                 self.panels[neighbor][-d] = None
                 self.panels[point][d] = None
+                self.all_panels.remove(common_panel)
             else:
                 self.panels[point][d] = Panel(d, point)
+                self.all_panels.append(self.panels[point][d])
                 for merge_dir in Dir:
                     if merge_dir != d and merge_dir != -d:
                         co_neighbor = point + offsets[merge_dir]
@@ -153,7 +152,7 @@ if __name__ == '__main__':
     p = Polycube()
     p.add(Point(1, 0, 0))
     p.add(Point(0, 1, 0))
-    for point in p.panels:
-        print(point, p.panels[point])
-
-
+    for pt in p.panels:
+        print(pt, p.panels[pt])
+    print(p.all_panels)
+    print(len(p.all_panels))
