@@ -98,30 +98,6 @@ class Polycube(object):
 
         self.points = {self.center}
         self.panels = {self.center: panels}
-        self.all_panels = list(panels.values())
-
-    def panel_find(self, point: Point, direction: Dir) -> Panel:
-        if self.panels[point][direction] is None:
-            return None
-        start = point
-        while not isinstance(self.panels[point][direction], Panel):
-            point = self.panels[point][direction]
-        self.panels[start][direction] = self.panels[point][direction]  # path compression
-        return self.panels[start][direction]
-
-    def panel_union(self, point1: Point, point2: Point, direction: Dir):
-        panel1 = self.panel_find(point1, direction)
-        panel2 = self.panel_find(point2, direction)
-        if panel1 is None or panel2 is None:
-            return
-        if len(panel1) > len(panel2):  # merge panel2 into panel1
-            panel1.merge(panel2)
-            self.panels[point2][direction] = point1
-            self.all_panels.remove(panel2)
-        else:  # merge panel1 into panel2
-            panel2.merge(panel1)
-            self.panels[point1][direction] = point2
-            self.all_panels.remove(panel1)
 
     def add(self, point: Point):
         offsets = {Dir.XPOS: (1, 0, 0), Dir.XNEG: (-1, 0, 0),
