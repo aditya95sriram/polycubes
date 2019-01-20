@@ -1,6 +1,6 @@
 import enum
 from typing import List, Union, Tuple, Dict
-
+import networkx as nx
 
 class Dir(enum.IntEnum):
     """
@@ -36,10 +36,10 @@ class Point(object):
         res.z += nz
         return res
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Point'):
         return (self.x, self.y, self.z) == (other.x, other.y, other.z)
 
-    def __ne__(self, other):
+    def __ne__(self, other: 'Point'):
         return (self.x, self.y, self.z) != (other.x, other.y, other.z)
 
     def __str__(self):
@@ -48,6 +48,14 @@ class Point(object):
 
     def __repr__(self):
         return "Pt:({0.x}, {0.y}, {0.z})".format(self)
+
+    def __iter__(self):
+        yield self.x
+        yield self.y
+        yield self.z
+
+    def midpoint(self, other: 'Point'):
+        return tuple(i/2 for i in self + other)
 
 
 class Face(object):
@@ -98,6 +106,7 @@ class Polycube(object):
 
         self.points = {self.center}
         self.panels = {self.center: panels}
+        {d: {()} for d in Dir}
 
     def add(self, point: Point):
         offsets = {Dir.XPOS: (1, 0, 0), Dir.XNEG: (-1, 0, 0),

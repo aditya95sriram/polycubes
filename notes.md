@@ -2,6 +2,18 @@
 
 ## Future work
 
+### 20th Jan
+* Implementation of graph
+* panels[dir] = {(1.5,0,0): graph, (2.5,0,0): graph}
+* planes at 0.5,1.5,2.5...
+* new point addition
+    * check if common face then delete vertex from graph
+    * else 
+        * create vertex (instead of create panel) 
+        * check 4 neighbors and add edge between neighbor and this point (instead of panel-union)
+* get_panels: look at connected components of graph to determine panels        
+
+
 ### 19th Jan
 * problem: union-find tree parent panel becoming none because it was common face
 * implement all panels properly (currently printing 7/8 panels) 
