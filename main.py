@@ -64,6 +64,19 @@ class Point(object):
     def midpoint(self, other: 'Point'):
         return tuple(i/2 for i in self + other)
 
+"""
+class Point2D(object):
+
+    def __init__(self, x: float, y: float):
+        self.x, self.y = x, y
+
+    def __hash__(self):
+        return hash((self.x, self.y))
+    
+    def __iter__(self):
+        yield self.x
+        yield self.y
+"""
 
 class Face(object):
     """
@@ -157,13 +170,21 @@ if __name__ == '__main__':
     p = Polycube()
     p.add(Point(1, 0, 0))
     p.add(Point(0, 1, 0))
+    p.add(Point(0, 1, 1))
+    mega = nx.Graph()
     for d in p.panels:
         print("Dir:", d)
         for plane in p.panels[d]:
             print("plane:", plane)
-            if not plane:
+            if not p.panels[d][plane]:
                 print("empty graph")
             else:
-                nx.draw(p.panels[d][plane], with_labels=True)
-                plt.show()
-                input("press a key:")
+                # mega.add_node(p.panels[d][plane])
+                mega.add_nodes_from(p.panels[d][plane].nodes())
+                mega.add_edges_from(p.panels[d][plane].edges())
+                # nx.draw(p.panels[d][plane], with_labels=True)
+                # plt.show()
+                # input("press a key:")
+    nx.draw(mega, with_labels=True)
+    print(list(nx.algorithms.connected_components(mega)))
+    plt.show()

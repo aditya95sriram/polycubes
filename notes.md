@@ -2,6 +2,14 @@
 
 ## Future work
 
+### 11th Feb
+* Implement function to translate connected compenent (3D) to set of (2D) tuples
+* Call draw_panel() on each connected component of mega graph
+* Return SVG something back to main from draw_panel
+* Implement manage_panels()
+* Implement dxf
+
+
 ### 20th Jan
 * Implementation of graph
 * panels[dir] = {(1.5,0,0): graph, (2.5,0,0): graph}
