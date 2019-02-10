@@ -1,6 +1,7 @@
 import enum
 from typing import List, Union, Tuple, Dict
 import networkx as nx
+import matplotlib.pyplot as plt
 
 class Dir(enum.IntEnum):
     """
@@ -25,7 +26,7 @@ class Point(object):
     def __hash__(self):
         return hash((self.x, self.y, self.z))
 
-    def __add__(self, other: Union['Point', Tuple[int, int, int], list]):
+    def __add__(self, other: Union['Point', Tuple[float, float, float], list]):
         res = Point(self.x, self.y, self.z)
         if isinstance(other, Point):
             nx, ny, nz = other.x, other.y, other.z
@@ -35,6 +36,12 @@ class Point(object):
         res.y += ny
         res.z += nz
         return res
+
+    def __mul__(self, other: float):
+        return Point(self.x * other, self.y * other, self.z * other)
+
+    def __sub__(self, other):
+        return self + other*(-1)
 
     def __eq__(self, other: 'Point'):
         return (self.x, self.y, self.z) == (other.x, other.y, other.z)
@@ -99,45 +106,64 @@ class Polycube(object):
     """
     Object to store polycube points as well as constituent faces
     """
+    offsets = {Dir.XPOS: Point(1, 0, 0), Dir.XNEG: Point(-1, 0, 0),
+               Dir.YPOS: Point(0, 1, 0), Dir.YNEG: Point(0, -1, 0),
+               Dir.ZPOS: Point(0, 0, 1), Dir.ZNEG: Point(0, 0, -1)}
+
     def __init__(self):
         self.center = Point(0, 0, 0)
-
-        panels = {d: Panel(d, self.center) for d in Dir}
-
         self.points = {self.center}
-        self.panels = {self.center: panels}
-        {d: {()} for d in Dir}
+        self.panels = dict()
+        for d in Dir:
+            label = self.center + Polycube.offsets[d]*0.5
+            self.panels[d] = {get_plane(label, d): init_graph(label)}
 
     def add(self, point: Point):
-        offsets = {Dir.XPOS: (1, 0, 0), Dir.XNEG: (-1, 0, 0),
-                   Dir.YPOS: (0, 1, 0), Dir.YNEG: (0, -1, 0),
-                   Dir.ZPOS: (0, 0, 1), Dir.ZNEG: (0, 0, -1)}
-
-        self.panels[point] = dict()
-        for d, offset in offsets.items():
+        self.points.add(point)
+        for d, offset in Polycube.offsets.items():
             neighbor = point + offset
+            face = point + offset * 0.5
             if neighbor in self.points:
-                # common_panel = self.panels[neighbor][-d]
-                common_panel = self.panel_find(neighbor, -d)
-                common_panel.points.remove(neighbor)
-                self.panels[neighbor][-d] = None
-                self.panels[point][d] = None
-                self.all_panels.remove(common_panel)
+                self.panels[-d][get_plane(face, -d)].remove_node(face)
             else:
-                self.panels[point][d] = Panel(d, point)
-                self.all_panels.append(self.panels[point][d])
-                for merge_dir in Dir:
-                    if merge_dir != d and merge_dir != -d:
-                        co_neighbor = point + offsets[merge_dir]
-                        if co_neighbor in self.points:
-                            self.panel_union(point, co_neighbor, d)
+                if get_plane(face, d) in self.panels[d]:
+                    plane_graph = self.panels[d][get_plane(face, d)]
+                    plane_graph.add_node(face)
+                    for merge_dir in Dir:
+                        if merge_dir != d and merge_dir != -d:
+                            neighbor_label = face + Polycube.offsets[merge_dir]
+                            if neighbor_label in plane_graph:
+                                plane_graph.add_edge(face, neighbor_label)
+                else:
+                    self.panels[d][get_plane(face, d)] = init_graph(face)
+
+
+def init_graph(label):
+    graph = nx.Graph()
+    graph.add_node(label)
+    return graph
+
+
+def get_plane(point: Point, direction: Dir):
+    if direction == Dir.XPOS or direction == Dir.XNEG:
+        return point.x
+    elif direction == Dir.YPOS or direction == Dir.YNEG:
+        return point.y
+    else:
+        return point.z
 
 
 if __name__ == '__main__':
     p = Polycube()
     p.add(Point(1, 0, 0))
     p.add(Point(0, 1, 0))
-    for pt in p.panels:
-        print(pt, p.panels[pt])
-    print(p.all_panels)
-    print(len(p.all_panels))
+    for d in p.panels:
+        print("Dir:", d)
+        for plane in p.panels[d]:
+            print("plane:", plane)
+            if not plane:
+                print("empty graph")
+            else:
+                nx.draw(p.panels[d][plane], with_labels=True)
+                plt.show()
+                input("press a key:")
