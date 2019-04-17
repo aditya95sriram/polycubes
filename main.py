@@ -1,7 +1,11 @@
 import enum
-from typing import List, Union, Tuple, Dict
+from typing import List, Union, Tuple, Dict, Set
 import networkx as nx
 import matplotlib.pyplot as plt
+import svg_tools
+import functools
+import itertools
+
 
 class Dir(enum.IntEnum):
     """
@@ -64,6 +68,7 @@ class Point(object):
     def midpoint(self, other: 'Point'):
         return tuple(i/2 for i in self + other)
 
+
 """
 class Point2D(object):
 
@@ -77,6 +82,7 @@ class Point2D(object):
         yield self.x
         yield self.y
 """
+
 
 class Face(object):
     """
@@ -126,7 +132,7 @@ class Polycube(object):
     def __init__(self):
         self.center = Point(0, 0, 0)
         self.points = {self.center}
-        self.panels = dict()
+        self.panels: Dict[Dir, Dict[float, nx.Graph]] = dict()
         for d in Dir:
             label = self.center + Polycube.offsets[d]*0.5
             self.panels[d] = {get_plane(label, d): init_graph(label)}
@@ -166,25 +172,36 @@ def get_plane(point: Point, direction: Dir):
         return point.z
 
 
+def ignore_coord(point: Point, direction: Dir):  # -> Tuple[float, float]
+    ignore_dir = direction.name[0].lower()
+    return tuple(getattr(point, d) for d in 'xyz' if d != ignore_dir)
+
+
 if __name__ == '__main__':
     p = Polycube()
     p.add(Point(1, 0, 0))
     p.add(Point(0, 1, 0))
     p.add(Point(0, 1, 1))
-    mega = nx.Graph()
     for d in p.panels:
         print("Dir:", d)
+        mega = nx.Graph()
         for plane in p.panels[d]:
             print("plane:", plane)
-            if not p.panels[d][plane]:
+            cur_graph = p.panels[d][plane]
+            if not cur_graph:
                 print("empty graph")
             else:
                 # mega.add_node(p.panels[d][plane])
-                mega.add_nodes_from(p.panels[d][plane].nodes())
-                mega.add_edges_from(p.panels[d][plane].edges())
+                mega.add_nodes_from(cur_graph.nodes())
+                mega.add_edges_from(cur_graph.edges())
+                ct = itertools.count(1)
+                for component in nx.algorithms.connected_components(cur_graph):
+                    filename = "{}-{}-{}.svg".format(d.name, str(plane).replace(".", "_"), next(ct))
+                    ignore_func = functools.partial(ignore_coord, direction=d)
+                    svg_tools.draw_panel(set(map(ignore_func, component)), filename)
                 # nx.draw(p.panels[d][plane], with_labels=True)
                 # plt.show()
                 # input("press a key:")
-    nx.draw(mega, with_labels=True)
-    print(list(nx.algorithms.connected_components(mega)))
-    plt.show()
+    #print(list(nx.algorithms.connected_components(mega)))
+    #nx.draw(mega, with_labels=True)
+    #plt.show()

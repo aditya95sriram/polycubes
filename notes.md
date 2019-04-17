@@ -1,6 +1,13 @@
 #Notes
 
-## Future work
+## Future Work
+
+### 18th Apr
+
+* Render Projections of Polycubes over axes (superimpose panels facing same direction)
+* From 11th Feb:
+    * Implement manage_panels()
+    * Implement dxf
 
 ### 11th Feb
 * Implement function to translate connected compenent (3D) to set of (2D) tuples
@@ -9,6 +16,11 @@
 * Implement manage_panels()
 * Implement dxf
 
+## Work Done
+
+### 18th Apr
+* Implemention of 3D Point to 2D tuples for SVG
+* Integrated svg_tools.py with main.py
 
 ### 20th Jan
 * Implementation of graph
